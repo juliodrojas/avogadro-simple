@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>Avogadro Simple</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef2f0; --panel:#ffffff; --panel2:#f4f7f5; --ink:#14201b; --muted:#51635a;
+  --line:#d3ded8; --accent:#0e7a5f; --accent-ink:#ffffff; --warn:#b3261e; --chip:#e3ece7;
+  --canvas:#fbfdfc; --shadow:0 8px 28px rgba(20,40,32,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0f1513; --panel:#171f1c; --panel2:#1d2623; --ink:#e8f0ec; --muted:#a7bab1;
+  --line:#2c3a35; --accent:#2fbf9b; --accent-ink:#08120e; --chip:#24322d; --canvas:#101816; --shadow:0 8px 28px rgba(0,0,0,.4); }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,sans-serif;font-size:16px;line-height:1.45}
+button{font:inherit;cursor:pointer}
+.wrap{max-width:1180px;margin:0 auto;padding:14px 14px 28px}
+.top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:4px 0 12px}
+h1{font-size:26px;margin:0;letter-spacing:-.02em}
+h1 span{color:var(--accent)}
+.sub{color:var(--muted);margin:2px 0 0;font-size:15px;max-width:560px}
+.readout{display:flex;gap:8px;flex-wrap:wrap}
+.pill{background:var(--panel);border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;font-family:"IBM Plex Mono",monospace;font-size:15px}
+.pill b{color:var(--accent)}
+.card{background:var(--panel);border:1.5px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.presets{padding:12px;margin-bottom:12px}
+.label{font-weight:700;font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.prow{display:flex;flex-wrap:wrap;gap:8px}
+.pbtn{border:1.5px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:12px;padding:11px 14px;min-height:48px;font-weight:700}
+.pbtn small{display:block;font-weight:400;color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:12px}
+.pbtn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.pbtn[aria-pressed="true"] small{color:inherit;opacity:.85}
+.main{display:grid;grid-template-columns:1fr 320px;gap:12px;align-items:start}
+@media (max-width:860px){.main{grid-template-columns:1fr}}
+.stage{padding:10px}
+canvas{display:block;width:100%;height:480px;background:var(--canvas);border-radius:12px;touch-action:none;cursor:grab}
+@media (max-width:560px){canvas{height:380px}}
+.hint{margin:8px 2px 0;color:var(--muted);font-size:14px;min-height:21px}
+.measure{background:var(--chip);border-radius:10px;padding:8px 12px;margin-top:8px;font-family:"IBM Plex Mono",monospace;font-size:14px;display:none}
+.panel{padding:14px;display:flex;flex-direction:column;gap:16px}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tbtn{border:1.5px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:12px;padding:12px 8px;min-height:52px;font-weight:700;text-align:center}
+.tbtn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.egrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ebtn{border:2px solid var(--line);border-radius:12px;min-height:52px;font-weight:700;font-size:17px;color:#101613;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.ebtn small{font-size:11px;font-weight:400}
+.ebtn[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:1px}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{flex:1;border:1.5px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:12px;padding:11px 6px;min-height:48px;font-weight:700}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.abtn{width:100%;border:1.5px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:12px;padding:12px;min-height:50px;font-weight:700}
+.abtn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.arow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+textarea{width:100%;min-height:104px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--ink);font-family:"IBM Plex Mono",monospace;font-size:12.5px;padding:10px}
+.chk{display:flex;align-items:center;gap:10px;padding:6px 0;font-weight:700}
+.chk input{width:22px;height:22px;accent-color:var(--accent)}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:.25s;max-width:92vw;text-align:center;z-index:9;font-weight:700}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err{background:var(--warn);color:#fff}
+.foot{color:var(--muted);font-size:13.5px;margin-top:14px}
+.foot a{color:var(--accent)}
+.selinfo{font-family:"IBM Plex Mono",monospace;font-size:13.5px;background:var(--panel2);border:1.5px solid var(--line);border-radius:10px;padding:8px 12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Avogadro <span>Simple</span></h1>
+      <p class="sub">Build molecules in 3D — the easy way. Every Avogadro tool is here, with big buttons and plain words.</p>
+    </div>
+    <div class="readout" aria-live="polite">
+      <div class="pill">Formula <b id="formula">H₂O</b></div>
+      <div class="pill">Weight <b id="mass">18.02 g/mol</b></div>
+      <div class="pill">Atoms <b id="acount">3</b></div>
+    </div>
+  </div>
+
+  <section class="card presets" aria-label="Ready-made molecules">
+    <p class="label">1 · Start with a molecule — tap one</p>
+    <div class="prow" id="presets"></div>
+  </section>
+
+  <div class="main">
+    <section class="card stage">
+      <canvas id="cv" aria-label="3D molecule viewer. Drag to spin."></canvas>
+      <p class="hint" id="hint"></p>
+      <div class="measure" id="measureBox"></div>
+    </section>
+
+    <aside class="card panel">
+      <div>
+        <p class="label">2 · Pick a tool</p>
+        <div class="tgrid" id="tools">
+          <button class="tbtn" data-tool="navigate" aria-pressed="true">🧭 Spin view</button>
+          <button class="tbtn" data-tool="select" aria-pressed="false">👆 Select</button>
+          <button class="tbtn" data-tool="draw" aria-pressed="false">✏️ Add atom</button>
+          <button class="tbtn" data-tool="bond" aria-pressed="false">🔗 Make bond</button>
+          <button class="tbtn" data-tool="measure" aria-pressed="false">📏 Measure</button>
+          <button class="tbtn" data-tool="erase" aria-pressed="false">🧽 Erase</button>
+        </div>
+        <div class="selinfo" id="selInfo" style="margin-top:8px">Nothing selected.</div>
+      </div>
+
+      <div id="drawOpts">
+        <p class="label">3 · Pick an element (for Add atom)</p>
+        <div class="egrid" id="elements"></div>
+        <p class="label" style="margin-top:12px">Bond type (for Add &amp; Make bond)</p>
+        <div class="seg" id="bondOrder" role="group" aria-label="Bond type">
+          <button data-order="1" aria-pressed="true">Single —</button>
+          <button data-order="2" aria-pressed="false">Double ═</button>
+          <button data-order="3" aria-pressed="false">Triple ≡</button>
+        </div>
+      </div>
+
+      <div>
+        <p class="label">4 · How it looks</p>
+        <div class="seg" id="views" role="group" aria-label="View style">
+          <button data-view="ball" aria-pressed="true">Ball &amp; stick</button>
+          <button data-view="stick" aria-pressed="false">Stick</button>
+          <button data-view="space" aria-pressed="false">Space-filling</button>
+        </div>
+      </div>
+
+      <div>
+        <p class="label">5 · Fix &amp; finish</p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="abtn primary" id="cleanup">✨ Tidy up shape (geometry cleanup)</button>
+          <div class="arow">
+            <button class="abtn" id="undo">↩️ Undo</button>
+            <button class="abtn" id="clear">🗑️ Clear all</button>
+          </div>
+          <label class="chk"><input type="checkbox" id="advToggle"> Show advanced options</label>
+        </div>
+      </div>
+
+      <div id="adv" hidden>
+        <p class="label">Advanced · Spin, labels &amp; zoom</p>
+        <label class="chk"><input type="checkbox" id="spinChk" checked> Keep spinning</label>
+        <label class="chk"><input type="checkbox" id="labelChk"> Show element letters on atoms</label>
+        <label style="display:block;font-weight:700;margin-top:6px">Zoom
+          <input type="range" id="zoom" min="40" max="220" value="100" style="width:100%;accent-color:var(--accent)">
+        </label>
+        <p class="label" style="margin-top:14px">Advanced · XYZ file (works with desktop Avogadro)</p>
+        <textarea id="xyz" spellcheck="false" aria-label="XYZ text"></textarea>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+          <button class="abtn" id="xyzRefresh">Update XYZ from molecule</button>
+          <div class="arow">
+            <button class="abtn" id="xyzDownload">⬇️ Download .xyz</button>
+            <button class="abtn" id="xyzCopy">Copy XYZ</button>
+          </div>
+          <button class="abtn" id="xyzImport">Load molecule from XYZ text above</button>
+          <label class="abtn" style="text-align:center">Open .xyz file…
+            <input type="file" id="xyzFile" accept=".xyz,.txt" hidden>
+          </label>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <p class="foot">Simple mode of <a href="https://github.com/avogadro" target="_blank" rel="noopener">Avogadro</a> — the free, open-source molecule editor for computational chemistry, molecular modeling, bioinformatics and materials science. Tool names and workflows follow the official Avogadro manual (Navigate, Draw, Bond, Measure, Erase). Colors are standard CPK colors; bond rules follow each element's valence, so an atom can never hold more bonds than chemistry allows. XYZ files made here open in desktop Avogadro.</p>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* ============ Chemistry data (CPK colors, standard atomic weights, valence) ============ */
+var EL = {
+ H:{name:"Hydrogen", color:"#e8e8e8", tc:"#111", mass:1.008,  val:1, cov:0.31, vdw:1.20},
+ B:{name:"Boron",    color:"#ffb5b5", tc:"#111", mass:10.81,  val:3, cov:0.84, vdw:1.92},
+ C:{name:"Carbon",   color:"#505050", tc:"#fff", mass:12.011, val:4, cov:0.76, vdw:1.70},
+ N:{name:"Nitrogen", color:"#3050f8", tc:"#fff", mass:14.007, val:3, cov:0.71, vdw:1.55},
+ O:{name:"Oxygen",   color:"#ff0d0d", tc:"#fff", mass:15.999, val:2, cov:0.66, vdw:1.52},
+ F:{name:"Fluorine", color:"#90e050", tc:"#111", mass:18.998, val:1, cov:0.57, vdw:1.47},
+ Si:{name:"Silicon", color:"#f0c8a0", tc:"#111", mass:28.085, val:4, cov:1.11, vdw:2.10},
+ P:{name:"Phosphorus",color:"#ff8000",tc:"#111", mass:30.974, val:5, cov:1.07, vdw:1.80},
+ S:{name:"Sulfur",   color:"#e8c832", tc:"#111", mass:32.06,  val:6, cov:1.05, vdw:1.80},
+ Cl:{name:"Chlorine",color:"#1ff01f", tc:"#111", mass:35.45,  val:1, cov:1.02, vdw:1.75},
+ Br:{name:"Bromine", color:"#a62929", tc:"#fff", mass:79.904, val:1, cov:1.20, vdw:1.85},
+ I:{name:"Iodine",   color:"#940094", tc:"#fff", mass:126.90, val:1, cov:1.39, vdw:1.98}
+};
+var EL_ORDER = ["H","C","N","O","B","F","Si","P","S","Cl","Br","I"];
+function A(el,x,y,z){return {el:el,x:x,y:y,z:z};}
+function Bd(a,b,o){return {a:a,b:b,o:o||1};}
+
+/* ============ 10 presets — hand-built, realistic lengths/angles ============ */
+function methane(){var s=0.629;return {name:"Methane",atoms:[A("C",0,0,0),A("H",s,s,s),A("H",-s,-s,s),A("H",-s,s,-s),A("H",s,-s,-s)],bonds:[Bd(0,1),Bd(0,2),Bd(0,3),Bd(0,4)]};}
+function ammonia(){return {name:"Ammonia",atoms:[A("N",0,0,0.25),A("H",0.94,0,-0.33),A("H",-0.47,0.81,-0.33),A("H",-0.47,-0.81,-0.33)],bonds:[Bd(0,1),Bd(0,2),Bd(0,3)]};}
+function co2(){return {name:"Carbon dioxide",atoms:[A("C",0,0,0),A("O",1.16,0,0),A("O",-1.16,0,0)],bonds:[Bd(0,1,2),Bd(0,2,2)]};}
+function ethane(){var at=[A("C",-0.77,0,0),A("C",0.77,0,0)];var h1=[[ -1.13,1.03,0],[-1.13,-0.51,0.89],[-1.13,-0.51,-0.89]];var h2=[[1.13,-1.03,0],[1.13,0.51,-0.89],[1.13,0.51,0.89]];h1.concat(h2).forEach(function(p){at.push(A("H",p[0],p[1],p[2]));});return {name:"Ethane",atoms:at,bonds:[Bd(0,1),Bd(0,2),Bd(0,3),Bd(0,4),Bd(1,5),Bd(1,6),Bd(1,7)]};}
+function ethanol(){var at=[A("C",-1.35,0.15,0),A("C",0.05,-0.35,0.2),A("O",1.05,0.55,-0.35),A("H",-1.45,1.22,0.1),A("H",-1.9,-0.35,0.75),A("H",-1.75,-0.25,-0.9),A("H",0.3,-1.3,0.65),A("H",0.15,-0.55,-0.85),A("H",1.9,0.25,-0.15)];return {name:"Ethanol",atoms:at,bonds:[Bd(0,1),Bd(1,2),Bd(0,3),Bd(0,4),Bd(0,5),Bd(1,6),Bd(1,7),Bd(2,8)]};}
+function benzene(){var at=[],bd=[];for(var i=0;i<6;i++){var t=i*Math.PI/3;at.push(A("C",1.40*Math.cos(t),1.40*Math.sin(t),0));}for(var j=0;j<6;j++){var t2=j*Math.PI/3;at.push(A("H",2.48*Math.cos(t2),2.48*Math.sin(t2),0));bd.push(Bd(j,(j+1)%6,(j%2===0)?2:1));bd.push(Bd(j,6+j));}return {name:"Benzene",atoms:at,bonds:bd};}
+function glucose(){ /* open-chain glucose HOCH2-(CHOH)4-CHO, zig-zag */
+ var at=[A("C",-3.7,0.8,0),A("O",-4.35,1.7,0),A("H",-4.05,-0.15,0),
+ A("C",-2.25,0.15,0.3),A("O",-2.3,0.35,1.55),A("H",-1.8,-0.5,-0.35),A("H",-2.75,1.15,1.7),
+ A("C",-0.8,0.8,-0.3),A("O",-0.75,0.55,-1.55),A("H",-1.35,1.65,0.05),A("H",-0.2,1.25,-1.7),
+ A("C",0.65,0.15,0.3),A("O",0.7,0.35,1.55),A("H",1.2,-0.5,-0.35),A("H",0.15,1.15,1.7),
+ A("C",2.1,0.8,-0.3),A("O",2.15,0.55,-1.55),A("H",1.55,1.65,0.05),A("H",2.7,1.25,-1.7),
+ A("C",3.55,0.15,0.3),A("O",4.4,0.9,-0.35),A("H",3.85,-0.85,-0.25),A("H",3.3,0.35,1.35),A("H",5.05,0.35,-0.8)];
+ var bd=[Bd(0,1,2),Bd(0,2),Bd(0,3),Bd(3,4),Bd(3,5),Bd(4,6),Bd(3,7),Bd(7,8),Bd(7,9),Bd(8,10),Bd(7,11),Bd(11,12),Bd(11,13),Bd(12,14),Bd(11,15),Bd(15,16),Bd(15,17),Bd(16,18),Bd(15,19),Bd(19,20),Bd(19,21),Bd(19,22),Bd(20,23)];
+ return {name:"Glucose",atoms:at,bonds:bd};}
+function caffeine(){
+ var at=[A("N",-1.9,0.7,0),A("C",-0.95,1.55,0),A("N",0.35,1.25,0),A("C",0.75,0.0,0),A("C",-0.15,-1.0,0),A("C",-1.65,-0.55,0),
+ A("N",0.35,-2.1,0),A("C",1.65,-1.65,0),A("N",1.75,-0.35,0),A("O",-1.25,2.7,0),A("O",-2.35,-1.45,0),
+ A("C",-3.3,1.15,0),A("C",1.15,2.35,0),A("C",-0.15,-3.45,0),A("H",2.45,-2.3,0),
+ A("H",-3.6,2.2,0),A("H",-3.75,0.7,0.85),A("H",-3.75,0.7,-0.85),A("H",0.75,3.35,0),A("H",1.7,2.05,0.85),A("H",1.7,2.05,-0.85),
+ A("H",-1.2,-3.75,0),A("H",0.35,-3.85,0.85),A("H",0.35,-3.85,-0.85)];
+ var bd=[Bd(0,1),Bd(1,2),Bd(2,3),Bd(3,4,2),Bd(4,5),Bd(5,0),Bd(1,9,2),Bd(5,10,2),Bd(0,11),Bd(2,12),Bd(4,6),Bd(6,7),Bd(7,8,2),Bd(8,3),Bd(6,13),Bd(7,14),Bd(11,15),Bd(11,16),Bd(11,17),Bd(12,18),Bd(12,19),Bd(12,20),Bd(13,21),Bd(13,22),Bd(13,23)];
+ return {name:"Caffeine",atoms:at,bonds:bd};}
+function aspirin(){
+ var at=[],bd=[],i,t;
+ for(i=0;i<6;i++){t=i*Math.PI/3+0.3;at.push(A("C",1.40*Math.cos(t),1.40*Math.sin(t),0));}
+ for(i=0;i<6;i++){bd.push(Bd(i,(i+1)%6,(i%2===0)?2:1));}
+ /* ring H on carbons 2,3,4,5 -> atom idx 6,7,8,9 */
+ [2,3,4,5].forEach(function(ci){var a=at[ci];var L=Math.hypot(a.x,a.y);at.push(A("H",a.x/L*2.48,a.y/L*2.48,0));});
+ bd.push(Bd(2,6),Bd(3,7),Bd(4,8),Bd(5,9));
+ /* carboxyl on ring C0: C idx10, =O idx11, -O- idx12, H idx13 */
+ var c0=at[0],L0=Math.hypot(c0.x,c0.y),ux=c0.x/L0,uy=c0.y/L0;
+ at.push(A("C",ux*2.85,uy*2.85,0)); at.push(A("O",ux*3.45,uy*3.45,0.8)); at.push(A("O",ux*3.5,uy*3.5,-0.85)); at.push(A("H",ux*4.3,uy*4.3,-1.1));
+ bd.push(Bd(0,10),Bd(10,11,2),Bd(10,12),Bd(12,13));
+ /* ester on ring C1: O idx14, carbonyl C idx15, =O idx16, methyl C idx17, H idx18-20 */
+ var c1=at[1],L1=Math.hypot(c1.x,c1.y),vx=c1.x/L1,vy=c1.y/L1;
+ at.push(A("O",vx*2.6,vy*2.6,0)); at.push(A("C",vx*3.5,vy*3.5,0.9)); at.push(A("O",vx*3.95,vy*3.95,2.0)); at.push(A("C",vx*4.55,vy*4.55,0.15));
+ at.push(A("H",vx*5.6,vy*5.6,0.45)); at.push(A("H",vx*4.4,vy*4.4,-0.85)); at.push(A("H",vx*4.4,vy*4.4,1.15));
+ bd.push(Bd(1,14),Bd(14,15),Bd(15,16,2),Bd(15,17),Bd(17,18),Bd(17,19),Bd(17,20));
+ return {name:"Aspirin",atoms:at,bonds:bd};}
+function water(){return {name:"Water",atoms:[A("O",0,0,0),A("H",0.757,0.586,0),A("H",-0.757,0.586,0)],bonds:[Bd(0,1),Bd(0,2)]};}
+var PRESETS=[water(),methane(),ammonia(),co2(),ethane(),ethanol(),benzene(),glucose(),caffeine(),aspirin()];
+
+/* ============ State ============ */
+var mol={atoms:[],bonds:[]}, tool="navigate", view="ball", curEl="C", curOrder=1;
+var selected=-1, bondFirst=-1, measureSel=[], undoStack=[];
+var rotX=-0.45, rotY=0.6, zoomScale=1, spinning=true, showLabels=false, presetName="Water";
+var cv=document.getElementById("cv"), ctx=cv.getContext("2d");
+function clone(m){return JSON.parse(JSON.stringify(m));}
+function pushHist(){undoStack.push(clone(mol)); if(undoStack.length>60)undoStack.shift();}
+function toast(msg,err){var t=document.getElementById("toast");t.textContent=msg;t.className="show"+(err?" err":"");clearTimeout(t._h);t._h=setTimeout(function(){t.className="";},2600);}
+
+/* ============ Chemistry helpers ============ */
+function bondOrderSum(i){var s=0;mol.bonds.forEach(function(b){if(b.a===i||b.b===i)s+=b.o;});return s;}
+function canBond(i,extra){return bondOrderSum(i)+extra<=EL[mol.atoms[i].el].val;}
+function formulaStr(){var c={};mol.atoms.forEach(function(a){c[a.el]=(c[a.el]||0)+1;});var keys=Object.keys(c);var ord=[];if(c.C){ord.push("C");if(c.H)ord.push("H");}keys.sort().forEach(function(k){if(ord.indexOf(k)<0)ord.push(k);});
+ var sub={"0":"₀","1":"₁","2":"₂","3":"₃","4":"₄","5":"₅","6":"₆","7":"₇","8":"₈","9":"₉"};
+ return ord.map(function(k){return k+(c[k]>1?String(c[k]).split("").map(function(d){return sub[d];}).join(""):"");}).join("");}
+function molarMass(){var s=0;mol.atoms.forEach(function(a){s+=EL[a.el].mass;});return s;}
+function updateReadout(){document.getElementById("formula").textContent=mol.atoms.length?formulaStr():"—";document.getElementById("mass").textContent=mol.atoms.length?molarMass().toFixed(2)+" g/mol":"—";document.getElementById("acount").textContent=mol.atoms.length;refreshXYZ();}
+function dist3(a,b){return Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);}
+function idealLen(e1,e2,o){var base=EL[e1].cov+EL[e2].cov;if(o===2)base*=0.87;if(o===3)base*=0.78;return base;}
+
+/* ============ Load / presets UI ============ */
+function loadPreset(p){pushHist();mol=clone(p);presetName=p.name;selected=-1;bondFirst=-1;measureSel=[];document.getElementById("measureBox").style.display="none";
+ document.querySelectorAll(".pbtn").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.name===p.name?"true":"false");});
+ updateReadout();updateSelInfo();setHint();draw();}
+var prow=document.getElementById("presets");
+PRESETS.forEach(function(p){var counts={};p.atoms.forEach(function(a){counts[a.el]=(counts[a.el]||0)+1;});
+ var b=document.createElement("button");b.className="pbtn";b.dataset.name=p.name;b.setAttribute("aria-pressed","false");
+ b.innerHTML=p.name+"<small>"+Object.keys(counts).length+" elements · "+p.atoms.length+" atoms</small>";
+ b.addEventListener("click",function(){loadPreset(p);toast(p.name+" loaded");});prow.appendChild(b);});
+
+/* Element picker */
+var egrid=document.getElementById("elements");
+EL_ORDER.forEach(function(sym){var e=EL[sym];var b=document.createElement("button");b.className="ebtn";b.style.background=e.color;b.style.color=e.tc;b.dataset.el=sym;
+ b.setAttribute("aria-pressed",sym===curEl?"true":"false");b.innerHTML=sym+"<small>"+e.name+"</small>";
+ b.addEventListener("click",function(){curEl=sym;document.querySelectorAll(".ebtn").forEach(function(x){x.setAttribute("aria-pressed",x.dataset.el===sym?"true":"false");});if(tool!=="draw"&&tool!=="bond")setTool("draw");toast(e.name+" picked — tap the picture to add it, or drag from an atom to add it bonded.");});
+ egrid.appendChild(b);});
+
+/* Tools */
+var HINTS={navigate:"Drag to spin the molecule. Scroll or pinch to zoom.",select:"Tap an atom to see what it is.",draw:"Tap empty space to add a "+ "new atom. Drag from an atom to grow a bonded atom.",bond:"Tap one atom, then a second atom, to join them with the bond type picked below.",measure:"Tap 2 atoms for a distance. Tap 3 atoms for an angle.",erase:"Tap an atom to remove it. Tap the middle of a bond to remove just the bond."};
+function setHint(){document.getElementById("hint").textContent=HINTS[tool];}
+function setTool(t){tool=t;bondFirst=-1;if(t!=="measure"){measureSel=[];document.getElementById("measureBox").style.display="none";}
+ document.querySelectorAll("#tools .tbtn").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.tool===t?"true":"false");});setHint();draw();}
+document.querySelectorAll("#tools .tbtn").forEach(function(b){b.addEventListener("click",function(){setTool(b.dataset.tool);});});
+document.querySelectorAll("#bondOrder button").forEach(function(b){b.addEventListener("click",function(){curOrder=+b.dataset.order;document.querySelectorAll("#bondOrder button").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});});});
+document.querySelectorAll("#views button").forEach(function(b){b.addEventListener("click",function(){view=b.dataset.view;document.querySelectorAll("#views button").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});draw();});});
+
+function updateSelInfo(){var el=document.getElementById("selInfo");
+ if(selected<0||!mol.atoms[selected]){el.textContent="Nothing selected.";return;}
+ var a=mol.atoms[selected];el.textContent="Atom "+(selected+1)+": "+a.el+" — "+EL[a.el].name+" · bonds used "+bondOrderSum(selected)+" of "+EL[a.el].val;}
+
+/* ============ 3D rendering ============ */
+function fitCanvas(){var r=cv.getBoundingClientRect();var d=window.devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;ctx.setTransform(d,0,0,d,0,0);}
+window.addEventListener("resize",function(){fitCanvas();draw();});
+/* stable perspective projection */
+function proj(a){var cy=Math.cos(rotY),sy=Math.sin(rotY),cx=Math.cos(rotX),sx=Math.sin(rotX);
+ var x1=a.x*cy+a.z*sy, z1=-a.x*sy+a.z*cy, y2=a.y*cx-z1*sx, z2=a.y*sx+z1*cx;
+ var r=cv.getBoundingClientRect();var s=46*zoomScale*(+document.getElementById("zoom").value/100);var persp=1/(1+z2*0.035);
+ return {x:r.width/2+x1*s*persp, y:r.height/2+y2*s*persp, z:z2, s:persp};}
+function atomRadius(a){if(view==="space")return EL[a.el].vdw*26;if(view==="stick")return 9;return (a.el==="H"?13:19);}
+function draw(){var r=cv.getBoundingClientRect();ctx.clearRect(0,0,r.width,r.height);if(!mol.atoms.length){ctx.fillStyle=getComputedStyle(document.body).getPropertyValue("--muted");ctx.font="17px Atkinson Hyperlegible";ctx.textAlign="center";ctx.fillText("Empty — tap a molecule above, or use Add atom.",r.width/2,r.height/2);return;}
+ var P=mol.atoms.map(proj);
+ if(view!=="space"){mol.bonds.forEach(function(b){var p=P[b.a],q=P[b.b];if(!p||!q)return;
+   var dx=q.x-p.x,dy=q.y-p.y,L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L;ctx.strokeStyle="#7d8a83";ctx.lineCap="round";
+   var offs=b.o===1?[0]:b.o===2?[-3.4,3.4]:[-6,0,6];var w=view==="stick"?7:5;
+   offs.forEach(function(o){ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(p.x+nx*o,p.y+ny*o);ctx.lineTo(q.x+nx*o,q.y+ny*o);ctx.stroke();});});}
+ var order=mol.atoms.map(function(a,i){return i;}).sort(function(i,j){return P[i].z-P[j].z;});
+ order.forEach(function(i){var a=mol.atoms[i],p=P[i],rad=atomRadius(a)*p.s;var e=EL[a.el];
+  ctx.beginPath();ctx.arc(p.x,p.y,Math.max(rad,3),0,7);ctx.fillStyle=e.color;ctx.fill();
+  ctx.lineWidth=(i===selected||i===bondFirst||measureSel.indexOf(i)>=0)?3.5:1.2;ctx.strokeStyle=(i===selected||i===bondFirst||measureSel.indexOf(i)>=0)?"#ff8c1a":"rgba(0,0,0,.35)";ctx.stroke();
+  if(showLabels||view!=="space"){ctx.fillStyle=e.tc;ctx.font="700 "+Math.max(rad*0.85,9)+"px Atkinson Hyperlegible";ctx.textAlign="center";ctx.textBaseline="middle";if(showLabels||rad>11)ctx.fillText(a.el,p.x,p.y);}});
+ if(measureSel.length>=2){ctx.strokeStyle="#ff8c1a";ctx.lineWidth=2;ctx.setLineDash([6,5]);ctx.beginPath();measureSel.forEach(function(i,k){var p=P[i];if(k===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});ctx.stroke();ctx.setLineDash([]);}}
+function pickAtom(mx,my){var r=cv.getBoundingClientRect();var best=-1,bd=1e9;mol.atoms.forEach(function(a,i){var p=proj(a);var d=Math.hypot(p.x-mx,p.y-my);var rad=Math.max(atomRadius(a)*p.s,14);if(d<rad+6&&d<bd){bd=d;best=i;}});return best;}
+function pickBond(mx,my){var best=-1,bd=16;mol.bonds.forEach(function(b,bi){var p=proj(mol.atoms[b.a]),q=proj(mol.atoms[b.b]);var L2=(q.x-p.x)*(q.x-p.x)+(q.y-p.y)*(q.y-p.y);var t=L2?Math.max(0,Math.min(1,((mx-p.x)*(q.x-p.x)+(my-p.y)*(q.y-p.y))/L2)):0;var d=Math.hypot(mx-(p.x+t*(q.x-p.x)),my-(p.y+t*(q.y-p.y)));if(d<bd){bd=d;best=bi;}});return best;}
+function screenToWorld(mx,my){var r=cv.getBoundingClientRect();var s=46*zoomScale*(+document.getElementById("zoom").value/100);
+ var x=(mx-r.width/2)/s, y=(my-r.height/2)/s;
+ var cy=Math.cos(-rotY),sy=Math.sin(-rotY),cx=Math.cos(-rotX),sx=Math.sin(-rotX);
+ var y2=y*cx, z2=y*sx; /* approx inverse ignoring z coupling, z=0 plane */
+ return {x:x*cy, y:y2, z:-x*sy+z2*0};}
+
+/* ============ Pointer interaction ============ */
+var drag=null;
+cv.addEventListener("pointerdown",function(ev){cv.setPointerCapture(ev.pointerId);var r=cv.getBoundingClientRect();var mx=ev.clientX-r.left,my=ev.clientY-r.top;var hit=pickAtom(mx,my);
+ drag={x:mx,y:my,hit:hit,moved:false};
+ if(tool==="select"){selected=hit;updateSelInfo();draw();}
+ else if(tool==="erase"&&hit>=0){pushHist();var removed=hit;mol.atoms.splice(hit,1);mol.bonds=mol.bonds.filter(function(b){return b.a!==removed&&b.b!==removed;}).map(function(b){return {a:b.a>removed?b.a-1:b.a,b:b.b>removed?b.b-1:b.b,o:b.o};});selected=-1;updateReadout();updateSelInfo();toast("Atom removed");drag=null;draw();}
+ else if(tool==="bond"){if(hit>=0){if(bondFirst<0){bondFirst=hit;selected=hit;toast("Now tap a second atom to join them.");}
+   else if(hit!==bondFirst){var ex=-1;mol.bonds.forEach(function(b,i){if((b.a===bondFirst&&b.b===hit)||(b.a===hit&&b.b===bondFirst))ex=i;});
+     var need=curOrder-(ex>=0?mol.bonds[ex].o:0);
+     if(need>0&&(!canBond(bondFirst,need)||!canBond(hit,need))){toast("That would give an atom too many bonds. "+EL[mol.atoms[canBond(bondFirst,need)?hit:bondFirst].el]+" is full.",true);}
+     else{pushHist();if(ex>=0)mol.bonds[ex].o=curOrder;else mol.bonds.push(Bd(bondFirst,hit,curOrder));toast("Bond made");}
+     bondFirst=-1;updateSelInfo();draw();}
+   else bondFirst=-1;draw();}}
+ else if(tool==="measure"&&hit>=0){if(measureSel.indexOf(hit)<0)measureSel.push(hit);if(measureSel.length>3)measureSel=[hit];showMeasure();selected=hit;updateSelInfo();draw();}
+});
+cv.addEventListener("pointermove",function(ev){if(!drag)return;var r=cv.getBoundingClientRect();var mx=ev.clientX-r.left,my=ev.clientY-r.top;var dx=mx-drag.x,dy=my-drag.y;
+ if(Math.abs(dx)+Math.abs(dy)>4)drag.moved=true;
+ if(tool==="navigate"&&drag.moved){rotY+=dx*0.012;rotX+=dy*0.012;drag.x=mx;drag.y=my;draw();}
+ else if(tool==="draw"&&drag.hit>=0&&drag.moved){draw();}});
+cv.addEventListener("pointerup",function(ev){if(!drag)return;var r=cv.getBoundingClientRect();var mx=ev.clientX-r.left,my=ev.clientY-r.top;var d=drag;drag=null;
+ if(tool==="draw"){
+   if(d.hit>=0&&d.moved){ /* drag from atom: grow bonded atom */
+     var w=screenToWorld(mx,my);var na={el:curEl,x:w.x,y:w.y,z:mol.atoms[d.hit].z};
+     var L=dist3(na,mol.atoms[d.hit]);var idl=idealLen(mol.atoms[d.hit].el,curEl,curOrder);
+     if(L>0.2){na.x=mol.atoms[d.hit].x+(na.x-mol.atoms[d.hit].x)/L*idl;na.y=mol.atoms[d.hit].y+(na.y-mol.atoms[d.hit].y)/L*idl;}
+     if(!canBond(d.hit,curOrder)){toast(EL[mol.atoms[d.hit].el].name+" already has all its bonds.",true);return;}
+     if(curEl!=="H"&&!canBond(d.hit,curOrder))return;
+     pushHist();mol.atoms.push(na);mol.bonds.push(Bd(d.hit,mol.atoms.length-1,curOrder));selected=mol.atoms.length-1;updateReadout();updateSelInfo();toast(curEl+" added, bonded");draw();
+   } else if(d.hit<0&&!d.moved){var w2=screenToWorld(mx,my);pushHist();mol.atoms.push({el:curEl,x:w2.x,y:w2.y,z:0});selected=mol.atoms.length-1;presetName="";document.querySelectorAll(".pbtn").forEach(function(b){b.setAttribute("aria-pressed","false");});updateReadout();updateSelInfo();toast(curEl+" added — use Make bond to join it");draw();}
+ }
+ else if(tool==="erase"&&d.hit<0&&!d.moved){var bi=pickBond(mx,my);if(bi>=0){pushHist();mol.bonds.splice(bi,1);toast("Bond removed");draw();}}
+ else if(tool==="navigate"){draw();}
+});
+cv.addEventListener("wheel",function(ev){ev.preventDefault();zoomScale=Math.max(0.45,Math.min(2.4,zoomScale*(ev.deltaY<0?1.08:0.93)));draw();},{passive:false});
+
+function showMeasure(){var box=document.getElementById("measureBox");
+ if(measureSel.length===2){var d=dist3(mol.atoms[measureSel[0]],mol.atoms[measureSel[1]]);box.style.display="block";box.textContent="Distance: "+mol.atoms[measureSel[0]].el+(measureSel[0]+1)+" — "+mol.atoms[measureSel[1]].el+(measureSel[1]+1)+" = "+d.toFixed(2)+" Å";}
+ else if(measureSel.length===3){var a=mol.atoms[measureSel[0]],b=mol.atoms[measureSel[1]],c=mol.atoms[measureSel[2]];
+  var v1=[a.x-b.x,a.y-b.y,a.z-b.z],v2=[c.x-b.x,c.y-b.y,c.z-b.z];var dot=v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2];var m1=Math.hypot(v1[0],v1[1],v1[2]),m2=Math.hypot(v2[0],v2[1],v2[2]);
+  var ang=Math.acos(Math.max(-1,Math.min(1,dot/(m1*m2))))*180/Math.PI;box.style.display="block";box.textContent="Angle at "+mol.atoms[measureSel[1]].el+(measureSel[1]+1)+": "+ang.toFixed(1)+"°  ·  distances "+m1.toFixed(2)+" Å and "+m2.toFixed(2)+" Å";}}
+
+/* ============ Actions: cleanup, undo, clear ============ */
+document.getElementById("cleanup").addEventListener("click",function(){
+ if(mol.atoms.length<2){toast("Add a molecule first.");return;}
+ pushHist();
+ for(var it=0;it<140;it++){var F=mol.atoms.map(function(){return [0,0,0];});
+  mol.bonds.forEach(function(b){var a=mol.atoms[b.a],c=mol.atoms[b.b];var d=dist3(a,c)||0.01;var idl=idealLen(a.el,c.el,b.o);var f=(d-idl)*0.28;var ux=(c.x-a.x)/d,uy=(c.y-a.y)/d,uz=(c.z-a.z)/d;
+   F[b.a][0]+=ux*f;F[b.a][1]+=uy*f;F[b.a][2]+=uz*f;F[b.b][0]-=ux*f;F[b.b][1]-=uy*f;F[b.b][2]-=uz*f;});
+  for(var i=0;i<mol.atoms.length;i++)for(var j=i+1;j<mol.atoms.length;j++){var bonded=mol.bonds.some(function(b){return (b.a===i&&b.b===j)||(b.a===j&&b.b===i);});if(bonded)continue;
+   var a2=mol.atoms[i],c2=mol.atoms[j];var d2=dist3(a2,c2);var min=(EL[a2.el].cov+EL[c2.el].cov)*1.15;if(d2<min&&d2>0.01){var push=(min-d2)*0.12;var ux2=(c2.x-a2.x)/d2,uy2=(c2.y-a2.y)/d2,uz2=(c2.z-a2.z)/d2;F[i][0]-=ux2*push;F[i][1]-=uy2*push;F[i][2]-=uz2*push;F[j][0]+=ux2*push;F[j][1]+=uy2*push;F[j][2]+=uz2*push;}}
+  mol.atoms.forEach(function(a,k){a.x+=F[k][0];a.y+=F[k][1];a.z+=F[k][2];});}
+ /* recenter */
+ var cx=0,cy2=0,cz=0;mol.atoms.forEach(function(a){cx+=a.x;cy2+=a.y;cz+=a.z;});cx/=mol.atoms.length;cy2/=mol.atoms.length;cz/=mol.atoms.length;
+ mol.atoms.forEach(function(a){a.x-=cx;a.y-=cy2;a.z-=cz;});
+ toast("Shape tidied — bond lengths set to normal values.");draw();});
+document.getElementById("undo").addEventListener("click",function(){if(!undoStack.length){toast("Nothing to undo.");return;}mol=undoStack.pop();selected=-1;bondFirst=-1;measureSel=[];updateReadout();updateSelInfo();draw();toast("Undone");});
+document.getElementById("clear").addEventListener("click",function(){if(!mol.atoms.length)return;pushHist();mol={atoms:[],bonds:[]};selected=-1;document.querySelectorAll(".pbtn").forEach(function(b){b.setAttribute("aria-pressed","false");});updateReadout();updateSelInfo();draw();});
+
+/* ============ Advanced: XYZ ============ */
+document.getElementById("advToggle").addEventListener("change",function(e){document.getElementById("adv").hidden=!e.target.checked;if(e.target.checked)refreshXYZ();});
+document.getElementById("spinChk").addEventListener("change",function(e){spinning=e.target.checked;});
+document.getElementById("labelChk").addEventListener("change",function(e){showLabels=e.target.checked;draw();});
+document.getElementById("zoom").addEventListener("input",draw);
+function xyzText(){var lines=[String(mol.atoms.length),(presetName||formulaStr())+"  Avogadro Simple"];mol.atoms.forEach(function(a){lines.push(a.el+" "+a.x.toFixed(4)+" "+a.y.toFixed(4)+" "+a.z.toFixed(4));});return lines.join("\n");}
+function refreshXYZ(){if(!document.getElementById("adv").hidden)document.getElementById("xyz").value=mol.atoms.length?xyzText():"";}
+document.getElementById("xyzRefresh").addEventListener("click",function(){refreshXYZ();toast("XYZ updated");});
+document.getElementById("xyzDownload").addEventListener("click",function(){if(!mol.atoms.length){toast("Nothing to download yet.",true);return;}var blob=new Blob([xyzText()],{type:"text/plain"});var aEl=document.createElement("a");aEl.href=URL.createObjectURL(blob);aEl.download=(presetName||"molecule").toLowerCase().replace(/\s+/g,"-")+".xyz";aEl.click();setTimeout(function(){URL.revokeObjectURL(aEl.href);},2000);toast("XYZ downloaded — it opens in desktop Avogadro");});
+document.getElementById("xyzCopy").addEventListener("click",function(){var t=xyzText();if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast("XYZ copied");},function(){toast("Copy blocked — select the text and copy it.",true);});}else toast("Copy blocked — select the text and copy it.",true);});
+function importXYZ(text){var lines=text.split(/\r?\n/).filter(function(l){return l.trim().length;});var n=parseInt(lines[0],10);
+ if(isNaN(n)||lines.length<3)throw new Error("bad");
+ var atoms=[],start=1;if(lines.length>=n+2)start=2;
+ for(var i=0;i<n;i++){var parts=lines[start+i].trim().split(/\s+/);var sym=parts[0];sym=sym.charAt(0).toUpperCase()+sym.slice(1).toLowerCase();if(sym==="CL")sym="Cl";if(sym==="BR")sym="Br";if(sym==="SI")sym="Si";
+  if(!EL[sym])throw new Error("Element "+parts[0]+" is not in the 12-element picker.");
+  atoms.push({el:sym,x:+parts[1],y:+parts[2],z:+parts[3]});}
+ var bonds=[];for(var a=0;a<atoms.length;a++)for(var b=a+1;b<atoms.length;b++){var d=dist3(atoms[a],atoms[b]);var max=(EL[atoms[a].el].cov+EL[atoms[b].el].cov)*1.30;if(d<max&&d>0.4){var need=1;var sa=0,sb=0;bonds.forEach(function(x){if(x.a===a||x.b===a)sa+=x.o;if(x.a===b||x.b===b)sb+=x.o;});if(sa+need<=EL[atoms[a].el].val&&sb+need<=EL[atoms[b].el].val)bonds.push({a:a,b:b,o:1});}}
+ pushHist();mol={atoms:atoms,bonds:bonds};selected=-1;presetName="";document.querySelectorAll(".pbtn").forEach(function(b){b.setAttribute("aria-pressed","false");});
+ /* recenter */ var cx=0,cy=0,cz=0;atoms.forEach(function(a){cx+=a.x;cy+=a.y;cz+=a.z;});cx/=atoms.length;cy/=atoms.length;cz/=atoms.length;atoms.forEach(function(a){a.x-=cx;a.y-=cy;a.z-=cz;});
+ updateReadout();updateSelInfo();draw();toast("XYZ loaded: "+atoms.length+" atoms, "+bonds.length+" bonds found");}
+document.getElementById("xyzImport").addEventListener("click",function(){try{importXYZ(document.getElementById("xyz").value);}catch(e){toast("That XYZ did not load: "+e.message,true);}});
+document.getElementById("xyzFile").addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{importXYZ(String(rd.result));}catch(err){toast("That file did not load: "+err.message,true);}};rd.readAsText(f);});
+
+/* ============ Spin loop & start ============ */
+function loop(){if(spinning&&tool==="navigate"&&!drag){rotY+=0.008;draw();}requestAnimationFrame(loop);}
+fitCanvas();
+mol=clone(PRESETS[0]);presetName="Water";
+document.querySelectorAll(".pbtn").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.name==="Water"?"true":"false");});
+updateReadout();updateSelInfo();setHint();draw();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
